@@ -35,7 +35,7 @@ A React + Vite + TypeScript application that connects to the deployed programs v
 
 ## Directory Structure
 
-```bash
+```
 vespercount/
 │
 ├── .vscode/                        # VS Code workspace settings
