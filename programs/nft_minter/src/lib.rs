@@ -12,12 +12,12 @@ use anchor_spl::{
 };
 use mpl_token_metadata::types::DataV2;
 
-// The official VesperSwap Treasury Address (Hardcoded for demo)
+// The official VesperCount Treasury Address (Hardcoded for demo)
 // Replace with the real treasury pubkey on Mainnet.
 // Using a dummy address here.
 pub const TREASURY_ADDRESS: &str = "HQ4yY5sLhHntJzUWe7nDBXp8H2K2S4aXWz8S1L4H4Bqw";
 
-declare_id!("69B6zaEvJA78VWBzWdhbS2xDPGoSQ3qy4eKNubcvMSk6");
+declare_id!("4HdtnhfTqQzde9PGqAn2jQbJSTAdiM1NdknkSaZEE7ot");
 
 #[program]
 pub mod nft_minter {

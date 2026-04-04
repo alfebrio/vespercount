@@ -1,73 +1,143 @@
-# VesperSwap 🪐
+# VesperCount
 
-VesperSwap adalah sebuah *Decentralized Application* (DApp) yang dibangun di atas ekosistem **Solana** menggunakan framework **Anchor** untuk *smart contract* (Rust) dan **React + Vite** untuk *frontend* (UI).
+A full-stack **Solana Decentralized Application (DApp)** built with the **Anchor** framework for on-chain programs (Rust) and **React + Vite** for the frontend (TypeScript).
 
-Repositori ini adalah sebuah paket komplit (*monorepo*) yang merangkap program-program di sisi blockchain dan antarmuka web penggunanya.
-
----
-
-## 🏗️ Arsitektur Proyek
-
-Proyek ini terbagi menjadi 2 bagian utama: **Backend (Smart Contracts)** dan **Frontend (Web App)**.
-
-### 1. ⚙️ Smart Contracts (`/programs/`)
-Terdapat 3 program (kontrak pintar) terpisah di dalam *workspace* Anchor ini, yang masing-masing melayani studi kasus berbeda pada blockchain Solana:
-
-- **`vesperswap` (Program Counter)**
-  - Program sederhana menggunakan konsep **PDA (Program Derived Address)**.
-  - Memungkinkan *user* untuk menginisiasi (*initialize*) akun *counter* miliknya sendiri (terikat ke *wallet*), kemudian melakukan operasi tambah (`increment`) atau kurang (`decrement`) pada angka tersebut tanpa batas.
-  - Program ini mencontohkan bagaimana menyimpan `state`/data mutlak di Solana.
-
-- **`spl_token_minter` (Program SPL Token Minter)**
-  - Mengurus pencetakan (*minting*) dan pembakaran (*burning*) token dasar menggunakan standar **SPL Token**.
-  - Program ini berinteraksi langsung (Cross-Program Invocation/CPI) dengan *Token Program* bawaan Solana.
-
-- **`nft_minter` (Program NFT Minter)**
-  - Sebuah program pencetak NFT berbasis standar **Metaplex Master Edition V3**.
-  - Mengizinkan user untuk mencetak sebuah NFT unik dengan mengisi paramater Nama, Simbol, dan URI gambar.
-  - **Monetization:** Program ini memiliki mekanisme biaya (*fee*) internal, dimana setiap NFT yang dicetak akan secara paksa mentransfer **0.05 SOL** dari pengguna ke alamat kas (Treasury) yang sudah ditentukan (`HQ4yY...`).
-
-### 2. 🖥️ Frontend Web (`/app/`)
-Folder `app/` memuat *source code* website VesperSwap. Ini adalah titik interaksi pengguna terhadap ketiga program di atas.
-
-- **Teknologi:** React, Vite, TypeScript.
-- **Konektivitas Wallet:** Menggunakan `@solana/wallet-adapter-react` untuk memfasilitasi koneksi ke *wallet* seperti Phantom dan Solflare.
-- **Komponen Utama (di `src/components/`):**
-  - `<CounterCard />`: Tombol Antarmuka UI untuk berinteraksi dengan program `vesperswap`.
-  - `<TokenCard />`: Tombol antarmuka mem-mint/membakar SPL Token dari `spl_token_minter`.
-  - `<NftCard />`: Form pembuatan NFT yang terhubung langsung ke `nft_minter`.
-- Berjalan otomatis di ekosistem **Devnet** (atau *Localnet/localhost* tergantung `VITE_RPC_URL`).
+This monorepo bundles three independent smart contract programs and a unified web interface to interact with all of them on the Solana **Devnet**.
 
 ---
 
-## 📂 Struktur Direktori Menyeluruh
+## Architecture Overview
+
+The project is split into two main layers: **Backend (Anchor Programs)** and **Frontend (React App)**.
+
+### Backend — Smart Contracts (`/programs/`)
+
+Three separate Anchor programs, each demonstrating a different pattern on Solana:
+
+| Program | Description |
+|---|---|
+| `vespercount` | Stateful on-chain counter using **PDA** — supports initialize, increment, and decrement per wallet |
+| `spl_token_minter` | Mint and burn **SPL Tokens** via Cross-Program Invocation (CPI) with the Token Program |
+| `nft_minter` | Mint **Metaplex Master Edition NFTs** with on-chain metadata; includes a 0.05 SOL treasury fee per mint |
+
+### Frontend — Web App (`/app/`)
+
+A React + Vite + TypeScript application that connects to the deployed programs via Anchor's IDL.
+
+- **Wallet Support:** Phantom & Solflare via `@solana/wallet-adapter-react`
+- **Network:** Solana Devnet (configurable via `VITE_RPC_URL`)
+- **Components:**
+  - `<CounterCard />` — Interacts with the `vespercount` program
+  - `<TokenCard />` — Mints and burns SPL Tokens via `spl_token_minter`
+  - `<NftCard />` — Creates NFTs via `nft_minter`
+
+---
+
+## Directory Structure
 
 ```text
-vesperswap/
-├── Anchor.toml           # Konfigurasi workspace Anchor (IDs program, provider network)
-├── Cargo.toml            # Konfigurasi package Rust untuk backend
-├── programs/             # RUST SMART CONTRACTS
-│   ├── nft_minter/       # Program pencetak NFT + Metaplex logic + treasury logic
-│   ├── spl_token_minter/ # Program SPL token dasar
-│   └── vesperswap/       # Program Counter stateful (PDA)
-├── app/                  # UI FRONTEND (REACT + VITE)
+vespercount/
+│
+├── .vscode/                        # VS Code workspace settings
+│
+├── app/                            # Frontend (React + Vite + TypeScript)
 │   ├── src/
-│   │   ├── components/   # UI logic pemanggilan smart contract (Counter, Token, NFT)
-│   │   ├── hooks/        # React Hooks untuk koneksi anchor provider
-│   │   ├── idl/          # File IDL JSON (Jembatan komunikasi antara Frontend dan Backend)
-│   │   └── App.tsx       # Root layout aplikasi (Dark mode, Wallet Providers)
-│   ├── package.json
-│   └── vite.config.ts
-├── tests/                # Folder ts-mocha untuk menguji script rust saat perintah `anchor test`
-├── package.json          # Root npm configurations (scripts & dependencies)
-└── run.txt               # Step-by-step tutorial untuk menjalankan proyek di komputer lokal
+│   │   ├── components/
+│   │   │   ├── CounterCard.tsx     # UI for vespercount program
+│   │   │   ├── NftCard.tsx         # UI for nft_minter program
+│   │   │   ├── TokenCard.tsx       # UI for spl_token_minter program
+│   │   │   └── WalletButton.tsx    # Wallet connect button
+│   │   ├── hooks/
+│   │   │   └── useCounter.ts       # Anchor provider + counter state hook
+│   │   ├── idl/                    # Generated IDL JSON files (ABI bridge)
+│   │   ├── App.tsx                 # Root layout, wallet providers, dark mode
+│   │   ├── index.css               # Global styles & design tokens
+│   │   └── main.tsx                # React entry point
+│   ├── index.html                  # HTML shell
+│   ├── package.json                # Frontend dependencies
+│   ├── tsconfig.json               # TypeScript config (frontend)
+│   └── vite.config.ts              # Vite + Node polyfills config
+│
+├── migrations/                     # Anchor deploy migration scripts
+│
+├── programs/                       # Rust smart contracts (Anchor)
+│   ├── nft_minter/
+│   │   └── src/lib.rs              # NFT minting logic + treasury fee
+│   ├── spl_token_minter/
+│   │   └── src/lib.rs              # SPL token mint/burn logic
+│   └── vespercount/
+│       └── src/lib.rs              # PDA counter logic
+│
+├── target/                         # Anchor build output (auto-generated)
+│   ├── deploy/                     # Compiled .so binaries
+│   ├── idl/                        # Generated IDL JSON files
+│   └── types/                      # Generated TypeScript types
+│
+├── tests/                          # Integration tests (ts-mocha)
+│   ├── nft_minter.ts
+│   ├── spl_token_minter.ts
+│   └── vespercount.ts
+│
+├── .gitignore
+├── Anchor.toml                     # Anchor workspace config (program IDs, cluster, wallet)
+├── Cargo.lock                      # Rust dependency lockfile
+├── Cargo.toml                      # Rust workspace manifest
+├── package.json                    # Root scripts & Anchor test dependencies
+├── package-lock.json
+├── rust-toolchain.toml             # Pinned Rust toolchain version
+├── run.txt                         # Step-by-step setup & run guide
+├── tsconfig.json                   # TypeScript config (Anchor tests)
+└── yarn.lock
 ```
 
 ---
 
-## 🛠️ Hubungan Cara Kerja
+## How It Works
 
-1. Anda menulis kode kontrak pintar menggunakan Rust di `programs/`.
-2. Anda melakukan kompilasi dengan `anchor build`.
-3. Anchor secara otomatis akan membuat file IDL (berisi struktur fungsi Smart Contract dalam file `.json`) untuk frontend UI agar dapat memanggil instruksi RPC. File IDL di *deploy* bersamaan atau diimpor ke aplikasi React (`app/src/idl/`).
-4. Pengguna mengeklik tombol pada Web React (`app/`), kemudian web akan membuat **Transaction** dan dikirim *Wallet* (Phantom), lalu transaksi diteruskan ke blockchain Solana menyentuh Smart Contract program secara langsung.
+```
+1. Write smart contract logic in Rust  →  programs/<name>/src/lib.rs
+           ↓
+2. Compile with `anchor build`
+           ↓
+3. Anchor generates IDL (.json) + TypeScript types  →  target/idl/ & target/types/
+           ↓
+4. Frontend imports IDL  →  Creates typed Program instance via Anchor client
+           ↓
+5. User clicks button in React UI  →  Transaction built & signed by wallet (Phantom)
+           ↓
+6. Transaction sent to Solana Devnet  →  Smart contract executes on-chain
+```
+
+---
+
+## Quick Start
+
+See [`run.txt`](./run.txt) for the full step-by-step setup guide.
+
+```bash
+# Clone and install
+git clone https://github.com/alfebrio/vespercount.git
+cd vespercount
+yarn install
+
+# Build & deploy to Devnet
+anchor build
+anchor deploy
+
+# Run frontend
+cd app && npm install && npm run dev
+```
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Smart Contracts | Rust, Anchor Framework |
+| Blockchain | Solana (Devnet) |
+| Frontend | React 18, Vite, TypeScript |
+| Wallet | Solana Wallet Adapter (Phantom, Solflare) |
+| NFT Standard | Metaplex Token Metadata (Master Edition V3) |
+| Token Standard | SPL Token Program |
+| Testing | ts-mocha, Chai |

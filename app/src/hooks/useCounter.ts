@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { Program, AnchorProvider, BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import idl from "../../../target/idl/vesperswap.json";
+import idl from "../../../target/idl/vespercount.json";
 
 // Program ID dari IDL
 const PROGRAM_ID = new PublicKey("96xYKxDbPLnbE1mZmUXJvksn74QUEx7Evh6WmNt9VeM1");

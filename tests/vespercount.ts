@@ -2,13 +2,13 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Keypair, SystemProgram } from "@solana/web3.js";
 import { assert } from "chai";
-import { Vesperswap } from "../target/types/vesperswap";
+import { Vespercount } from "../target/types/vespercount";
 
-describe("vesperswap — Counter Program", () => {
+describe("vespercount — Counter Program", () => {
   // Configure provider & program
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
-  const program = anchor.workspace.Vesperswap as Program<Vesperswap>;
+  const program = anchor.workspace.Vespercount as Program<Vespercount>;
 
   // PDA counter untuk authority
   const [counterPda] = anchor.web3.PublicKey.findProgramAddressSync(

@@ -47,7 +47,7 @@ export default function App() {
             <nav className="navbar">
               <div className="brand">
                 <div className="brand-icon">⌘</div>
-                VesperSwap
+                VesperCount
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
@@ -83,7 +83,7 @@ export default function App() {
             </div>
 
             <footer style={{ padding: '40px 0', borderTop: '1px solid var(--border)', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              Built with precision for the Solana ecosystem. &copy; 2026 VesperSwap
+              Built with precision for the Solana ecosystem. &copy; 2026 VesperCount
             </footer>
           </div>
         </WalletModalProvider>

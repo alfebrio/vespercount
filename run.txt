@@ -1,54 +1,64 @@
 # Prerequisites
-Pastikan hal-hal berikut sudah terpasang di sistem sistem operasi (disarankan WSL2 untuk Windows):
+Make sure the following tools are installed on your system.
+WSL2 is strongly recommended for Windows users.
 
-1. Node.js & npm/yarn (untuk dependencies frontend & Anchor ts-mocha)
-2. Rust & Cargo (untuk smart contract):
+1. Node.js & npm (or yarn)
+   https://nodejs.org
+
+2. Rust & Cargo
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-3. Solana CLI (untuk interaksi blockchain):
+3. Solana CLI
    sh -c "$(curl -sSfL https://release.solana.com/v1.18.15/install)"
 
-4. Anchor CLI (framework Solana):
+4. Anchor CLI (via AVM)
    cargo install --git https://github.com/coral-xyz/anchor avm --locked --force
    avm install latest
    avm use latest
 
 
-# Command (WSL) yang Perlu Dijalankan untuk Menjalankan Program
-Langkah-langkah berikut diasumsikan dari saat Anda baru melakukan `git clone`.
+# Getting Started
+The following steps assume you have just cloned the repository.
 
-1. Masuk ke folder root proyek (setelah melakukan proses clone):
-   cd vesperswap
+1. Enter the project root directory:
+   cd vespercount
 
-2. Install dependencies Anchor & Node:
+2. Install root dependencies (Anchor & Node test runner):
    yarn install
-   # Atau jika menggunakan npm: npm install
+   # or: npm install
 
-3. Buat Keypair baru (jika di WSL belum ada file id.json) dan atur network ke devnet:
+3. Create a new wallet keypair (if none exists) and set network to Devnet:
    solana-keygen new
    solana config set --url devnet
-   
-   # Dapatkan modal SOL gratis untuk biaya deploy:
-   solana airdrop 2
 
-4. Sinkronisasi ID
+   # Fund your wallet with free Devnet SOL:
+   solana airdrop 5
+
+4. Sync program IDs from Anchor.toml into the Rust source files:
    anchor keys sync
 
-5. Build program Rust (Smart Contract):
+5. Build the Rust smart contracts:
    anchor build
-   # (Pastikan program id di file rust sesuai dengan yang di Anchor.toml setelah build)
+   # After build, verify that program IDs in each lib.rs match Anchor.toml
 
-6. Deploy program ke blockchain Devnet:
+6. Deploy all programs to Devnet:
    anchor deploy
 
-7. Masuk ke folder Frontend (Web React/Vite):
+7. Navigate to the frontend app:
    cd app
 
-8. Install dependencies Frontend:
+8. Install frontend dependencies:
    npm install
-   npm audit fix
+   # optional: npm audit fix
 
-9. Jalankan Web UI:
+9. Start the development server:
    npm run dev
 
-Aplikasi kemudian berjalan dan dapat dilihat di http://localhost:5173 / sesuai terminal vite.
+The app will be available at http://localhost:5173 (or as shown in the Vite terminal output).
+
+
+# Notes
+- Run `anchor test` from the project root to execute the full test suite.
+- Set a custom RPC endpoint by creating app/.env with: VITE_RPC_URL=<your-rpc-url>
+- For faster performance on Windows, work inside WSL2's home directory (~/)
+  instead of /mnt/c/... and open VS Code with the "Remote - WSL" extension.

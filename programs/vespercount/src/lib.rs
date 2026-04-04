@@ -2,10 +2,10 @@
 
 use anchor_lang::prelude::*;
 
-declare_id!("96xYKxDbPLnbE1mZmUXJvksn74QUEx7Evh6WmNt9VeM1");
+declare_id!("EaRJascHaUBn9KAdGNqtsj4ZnzkkDm4ZYCEeBp77aQUM");
 
 #[program]
-pub mod vesperswap {
+pub mod vespercount {
     use super::*;
 
     /// Inisialisasi akun counter baru (PDA) dengan nilai awal 0
