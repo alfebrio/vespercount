@@ -141,3 +141,24 @@ cd app && npm install && npm run dev
 | NFT Standard | Metaplex Token Metadata (Master Edition V3) |
 | Token Standard | SPL Token Program |
 | Testing | ts-mocha, Chai |
+
+```text
+vesperswap/
+├── Anchor.toml           # Konfigurasi workspace Anchor (IDs program, provider network)
+├── Cargo.toml            # Konfigurasi package Rust untuk backend
+├── programs/             # RUST SMART CONTRACTS
+│   ├── nft_minter/       # Program pencetak NFT + Metaplex logic + treasury logic
+│   ├── spl_token_minter/ # Program SPL token dasar
+│   └── vesperswap/       # Program Counter stateful (PDA)
+├── app/                  # UI FRONTEND (REACT + VITE)
+│   ├── src/
+│   │   ├── components/   # UI logic pemanggilan smart contract (Counter, Token, NFT)
+│   │   ├── hooks/        # React Hooks untuk koneksi anchor provider
+│   │   ├── idl/          # File IDL JSON (Jembatan komunikasi antara Frontend dan Backend)
+│   │   └── App.tsx       # Root layout aplikasi (Dark mode, Wallet Providers)
+│   ├── package.json
+│   └── vite.config.ts
+├── tests/                # Folder ts-mocha untuk menguji script rust saat perintah `anchor test`
+├── package.json          # Root npm configurations (scripts & dependencies)
+└── run.txt               # Step-by-step tutorial untuk menjalankan proyek di komputer lokal
+```
