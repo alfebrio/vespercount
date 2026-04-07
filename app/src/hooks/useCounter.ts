@@ -163,19 +163,23 @@ export function useCounter() {
     setState((s) => ({ ...s, txLoading: null }));
   }, [getProgram, wallet, fetchCounter]);
 
-  // ─── Increment ─────────────────────────────────────────────────────────────
-  const increment = useCallback(async () => {
+  // ─── Increment (with optional step) ───────────────────────────────────────
+  const increment = useCallback(async (step: number = 1) => {
     const program = getProgram();
     if (!program || !wallet) return;
 
     setState((s) => ({ ...s, txLoading: "increment", error: null, lastTx: null }));
     try {
-      const tx = await (program.methods as any)
-        .increment()
-        .accounts({ authority: wallet.publicKey })
-        .rpc();
+      // Call increment `step` times sequentially
+      let lastSig = "";
+      for (let i = 0; i < step; i++) {
+        lastSig = await (program.methods as any)
+          .increment()
+          .accounts({ authority: wallet.publicKey })
+          .rpc();
+      }
 
-      setState((s) => ({ ...s, lastTx: tx }));
+      setState((s) => ({ ...s, lastTx: lastSig }));
       await fetchCounter();
     } catch (err: any) {
       setState((s) => ({
@@ -188,19 +192,22 @@ export function useCounter() {
     setState((s) => ({ ...s, txLoading: null }));
   }, [getProgram, wallet, fetchCounter]);
 
-  // ─── Decrement ─────────────────────────────────────────────────────────────
-  const decrement = useCallback(async () => {
+  // ─── Decrement (with optional step) ───────────────────────────────────────
+  const decrement = useCallback(async (step: number = 1) => {
     const program = getProgram();
     if (!program || !wallet) return;
 
     setState((s) => ({ ...s, txLoading: "decrement", error: null, lastTx: null }));
     try {
-      const tx = await (program.methods as any)
-        .decrement()
-        .accounts({ authority: wallet.publicKey })
-        .rpc();
+      let lastSig = "";
+      for (let i = 0; i < step; i++) {
+        lastSig = await (program.methods as any)
+          .decrement()
+          .accounts({ authority: wallet.publicKey })
+          .rpc();
+      }
 
-      setState((s) => ({ ...s, lastTx: tx }));
+      setState((s) => ({ ...s, lastTx: lastSig }));
       await fetchCounter();
     } catch (err: any) {
       setState((s) => ({
@@ -217,12 +224,14 @@ export function useCounter() {
 }
 
 // ─── Helper: parse Anchor error message ────────────────────────────────────
-function parseAnchorError(err: any): string {
+export function parseAnchorError(err: any): string {
   const msg: string = err?.message ?? String(err);
   // Cari pesan custom error Anchor
   const customMatch = msg.match(/Error Message: (.+)/);
   if (customMatch) return customMatch[1];
-  // Cari error code
+  // Friendly Solana error messages
+  if (msg.toLowerCase().includes("insufficient funds")) return "Your wallet doesn't have enough SOL";
+  if (msg.toLowerCase().includes("blockhash not found")) return "Network congestion, please retry";
   if (msg.includes("Overflow")) return "❌ Counter sudah di nilai maksimum!";
   if (msg.includes("Underflow")) return "❌ Counter sudah di nilai minimum!";
   if (msg.includes("already in use")) return "⚠️ Counter sudah diinisialisasi.";

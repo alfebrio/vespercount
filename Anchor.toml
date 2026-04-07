@@ -6,9 +6,9 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-nft_minter = "4HdtnhfTqQzde9PGqAn2jQbJSTAdiM1NdknkSaZEE7ot"
-spl_token_minter = "7bmePcv2ZsiL5P8GxjL53SWvCdYXuoDU1r6kbFz5vi7U"
-vespercount = "EaRJascHaUBn9KAdGNqtsj4ZnzkkDm4ZYCEeBp77aQUM"
+nft_minter = "GH5zJpDnndzAidTPmhbnPNQDWXadcrMK9Kz9b1rcCj1t"
+spl_token_minter = "GQdn6CgBfknHDQvo7HLjiUHA5YEGWJxLoUUFC2kZ3cJR"
+vespercount = "9P3DhxcewypThYYGDkAhxxE5AfcaxNcEsBwdNrtbSojs"
 
 [registry]
 url = "https://api.apr.dev"

@@ -17,7 +17,7 @@ use mpl_token_metadata::types::DataV2;
 // Using a dummy address here.
 pub const TREASURY_ADDRESS: &str = "HQ4yY5sLhHntJzUWe7nDBXp8H2K2S4aXWz8S1L4H4Bqw";
 
-declare_id!("4HdtnhfTqQzde9PGqAn2jQbJSTAdiM1NdknkSaZEE7ot");
+declare_id!("GH5zJpDnndzAidTPmhbnPNQDWXadcrMK9Kz9b1rcCj1t");
 
 #[program]
 pub mod nft_minter {

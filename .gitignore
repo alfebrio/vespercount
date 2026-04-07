@@ -1,24 +1,14 @@
-# Node / Package Managers
-node_modules/
-app/node_modules/
-yarn-error.log
-npm-debug.log
+# VS Code workspace settings
+.vscode/
 
-# Rust / Cargo
+# Anchor build artifacts
+.anchor/
+
+# Rust binary builds
 target/
 
-# Anchor & Solana
-.anchor/
-test-ledger/
+# Node package dependencies
+node_modules/
 
-# Frontend (Vite)
+# Frontend production build (Vite)
 app/dist/
-
-# Environments
-.env
-.env.local
-app/.env
-
-# OS
-.DS_Store
-Thumbs.db

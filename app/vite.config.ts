@@ -29,4 +29,10 @@ export default defineConfig({
     target: "esnext",
     commonjsOptions: { transformMixedEsModules: true },
   },
+  server: {
+    watch: {
+      usePolling: true,
+      interval: 1000,
+    },
+  },
 });

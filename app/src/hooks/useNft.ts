@@ -65,9 +65,9 @@ export function useNft() {
       return mintKeypair.publicKey.toString();
     } catch (err: any) {
       console.error("NFT Mint Error:", err);
-      // Clean up Anchor or RPC error messages
+      // Store full error message — component handles display/truncation
       const msg = err?.message || String(err);
-      setError(msg.length > 100 ? msg.slice(0, 100) + "..." : msg);
+      setError(msg);
       setLoading(false);
       return null;
     }

@@ -3,7 +3,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Burn, Mint, MintTo, Token, TokenAccount};
 
-declare_id!("7bmePcv2ZsiL5P8GxjL53SWvCdYXuoDU1r6kbFz5vi7U");
+declare_id!("GQdn6CgBfknHDQvo7HLjiUHA5YEGWJxLoUUFC2kZ3cJR");
 
 #[program]
 pub mod spl_token_minter {

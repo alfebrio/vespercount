@@ -1,5 +1,7 @@
 # VesperCount
 
+![VesperCount Preview](./image.png)
+
 A full-stack **Solana Decentralized Application (DApp)** built with the **Anchor** framework for on-chain programs (Rust) and **React + Vite** for the frontend (TypeScript).
 
 This monorepo bundles three independent smart contract programs and a unified web interface to interact with all of them on the Solana **Devnet**.
@@ -38,55 +40,54 @@ A React + Vite + TypeScript application that connects to the deployed programs v
 ```text
 vespercount/
 │
-├── .vscode/                        # VS Code workspace settings
-│
-├── app/                            # Frontend (React + Vite + TypeScript)
+├── app/                                    # Frontend (React + Vite + TS)
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── CounterCard.tsx     # UI for vespercount program
-│   │   │   ├── NftCard.tsx         # UI for nft_minter program
-│   │   │   ├── TokenCard.tsx       # UI for spl_token_minter program
-│   │   │   └── WalletButton.tsx    # Wallet connect button
-│   │   ├── hooks/
-│   │   │   └── useCounter.ts       # Anchor provider + counter state hook
-│   │   ├── idl/                    # Generated IDL JSON files (ABI bridge)
-│   │   ├── App.tsx                 # Root layout, wallet providers, dark mode
-│   │   ├── index.css               # Global styles & design tokens
-│   │   └── main.tsx                # React entry point
-│   ├── index.html                  # HTML shell
-│   ├── package.json                # Frontend dependencies
-│   ├── tsconfig.json               # TypeScript config (frontend)
-│   └── vite.config.ts              # Vite + Node polyfills config
+│   │   ├── components/                     # Reusable UI components
+│   │   │   ├── CounterCard.tsx
+│   │   │   ├── NftCard.tsx
+│   │   │   ├── TokenCard.tsx
+│   │   │   └── WalletButton.tsx
+│   │   ├── hooks/                          # React hooks
+│   │   │   ├── useCounter.ts
+│   │   │   ├── useNft.ts
+│   │   │   └── useToken.ts
+│   │   ├── idl/                            # Generated IDL JSON files
+│   │   ├── App.tsx                         # Root layout
+│   │   ├── index.css                       # Global styles
+│   │   └── main.tsx                        # Entry point
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── tsconfig.json
+│   └── vite.config.ts
 │
-├── migrations/                     # Anchor deploy migration scripts
+├── migrations/                             # Anchor deployment scripts
+│   └── deploy.ts
 │
-├── programs/                       # Rust smart contracts (Anchor)
+├── programs/                               # Rust smart contracts (Anchor)
 │   ├── nft_minter/
-│   │   └── src/lib.rs              # NFT minting logic + treasury fee
+│   │   └── src/lib.rs                      # NFTs with treasury fee
 │   ├── spl_token_minter/
-│   │   └── src/lib.rs              # SPL token mint/burn logic
+│   │   └── src/lib.rs                      # SPL token mint/burn logic
 │   └── vespercount/
-│       └── src/lib.rs              # PDA counter logic
+│       └── src/lib.rs                      # PDA counter logic
 │
-├── target/                         # Anchor build output (auto-generated)
-│   ├── deploy/                     # Compiled .so binaries
-│   ├── idl/                        # Generated IDL JSON files
-│   └── types/                      # Generated TypeScript types
-│
-├── tests/                          # Integration tests (ts-mocha)
+├── tests/                                  # Integration tests (ts-mocha)
 │   ├── nft_minter.ts
 │   ├── spl_token_minter.ts
 │   └── vespercount.ts
 │
 ├── .gitignore
-├── Anchor.toml                     # Anchor workspace config (program IDs, cluster, wallet)
-├── Cargo.lock                      # Rust dependency lockfile
-├── Cargo.toml                      # Rust workspace manifest
-├── package.json                    # Root scripts & Anchor test dependencies
+├── Anchor.toml                             # Anchor workspace config
+├── Cargo.lock
+├── Cargo.toml
+├── README.md                               # Project documentation
+├── image.png                               # GitHub preview image
+├── package.json
 ├── package-lock.json
-├── rust-toolchain.toml             # Pinned Rust toolchain version
-├── run.txt                         # Step-by-step setup & run guide
-├── tsconfig.json                   # TypeScript config (Anchor tests)
+├── run.txt                                 # Step-by-step setup guide
+├── rust-toolchain.toml                     # Rust version specification
+├── tsconfig.json
 └── yarn.lock
 ```
 
