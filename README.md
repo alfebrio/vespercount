@@ -1,146 +1,84 @@
 # VesperCount
 
+![Solana](https://img.shields.io/badge/Solana-Devnet-31D0AA?style=flat-square&logo=solana)
+![Anchor](https://img.shields.io/badge/Anchor-Framework-000000?style=flat-square)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript)
+
+A full-stack Solana Decentralized Application (DApp) built utilizing the Anchor framework and React. VesperCount serves as a comprehensive reference architecture demonstrating core Solana blockchain primitives, including stateful Account management (PDAs), SPL Token operations, and Metaplex NFT minting.
+
 ![VesperCount Preview](./image.png)
 
-A full-stack **Solana Decentralized Application (DApp)** built with the **Anchor** framework for on-chain programs (Rust) and **React + Vite** for the frontend (TypeScript).
+## 📌 Architecture Overview
 
-This monorepo bundles three independent smart contract programs and a unified web interface to interact with all of them on the Solana **Devnet**.
+The system is decoupled into isolated on-chain Anchor programs and an event-driven frontend application. 
 
----
+### On-Chain Programs (`/programs`)
 
-## Architecture Overview
+1. **`vespercount`**: Demonstrates Program Derived Addresses (PDAs) with stateful counters. Features bulk operations (`increment`, `decrement`) to optimize transaction compute and manage state safely per-wallet.
+2. **`spl_token_minter`**: Implements Cross-Program Invocation (CPI) against the native SPL Token Program to mint and burn custom fungible tokens.
+3. **`nft_minter`**: Demonstrates the Metaplex Token Metadata program (Master Edition V3). Capable of minting NFTs with on-chain metadata pointers, incorporating treasury fee processing and hard supply caps.
 
-The project is split into two main layers: **Backend (Anchor Programs)** and **Frontend (React App)**.
+### Frontend Application (`/app`)
 
-### Backend — Smart Contracts (`/programs/`)
+The frontend is a Vite-powered React/TypeScript application designed with a focus on UI responsiveness and seamless wallet integration (`@solana/wallet-adapter`).
 
-Three separate Anchor programs, each demonstrating a different pattern on Solana:
+- **Global Event Sync**: Employs an event-driven pub-sub architecture (`utils/stats.ts`) to immediately synchronize UI state globally without redundant RPC polling.
+- **Unified Transaction History**: Caches temporal transaction data locally to construct a seamless user experience.
+- **Error Handling**: Implements client-side transaction simulations and resilient RPC fallback mechanisms handling standard Solana congestion exceptions.
 
-| Program | Description |
-|---|---|
-| `vespercount` | Stateful on-chain counter using **PDA** — supports initialize, increment, and decrement per wallet |
-| `spl_token_minter` | Mint and burn **SPL Tokens** via Cross-Program Invocation (CPI) with the Token Program |
-| `nft_minter` | Mint **Metaplex Master Edition NFTs** with on-chain metadata; includes a 0.05 SOL treasury fee per mint |
-
-### Frontend — Web App (`/app/`)
-
-A React + Vite + TypeScript application that connects to the deployed programs via Anchor's IDL. It features a modern, responsive design with a premium glassmorphism aesthetic and a dynamic sticky navbar.
-
-- **Wallet Support:** Phantom & Solflare via `@solana/wallet-adapter-react`
-- **Network:** Solana Devnet (configurable via `VITE_RPC_URL`)
-- **App Features & Components:**
-  - **Auto-Syncing Counter:** `<CounterCard />` interacts with the `vespercount` program.
-  - **Token Management:** `<TokenCard />` mints and burns SPL Tokens via `spl_token_minter`.
-  - **NFT Studio:** `<NftCard />` creates NFTs via `nft_minter`, featuring real-time metadata fetching and CORS-safe image previews.
-  - **Responsive Layout:** A modular dashboard grid that symmetrically aligns the navbar, cards, and footer sections up to `1600px`.
-
----
-
-## Directory Structure
+## 📂 Directory Structure
 
 ```text
 vespercount/
-│
-├── app/                                    # Frontend (React + Vite + TS)
+├── app/                        # React frontend application
 │   ├── src/
-│   │   ├── components/                     # Reusable UI components
-│   │   │   ├── CounterCard.tsx
-│   │   │   ├── NftCard.tsx
-│   │   │   ├── ToastContext.tsx
-│   │   │   ├── TokenCard.tsx
-│   │   │   └── WalletButton.tsx
-│   │   ├── hooks/                          # React hooks
-│   │   │   ├── useCounter.ts
-│   │   │   ├── useNft.ts
-│   │   │   └── useToken.ts
-│   │   ├── idl/                            # Generated IDL JSON files
-│   │   ├── App.tsx                         # Root layout
-│   │   ├── index.css                       # Global styles
-│   │   └── main.tsx                        # Entry point
-│   ├── index.html
-│   ├── package.json
-│   ├── package-lock.json
-│   ├── tsconfig.json
-│   └── vite.config.ts
-│
-├── migrations/                             # Anchor deployment scripts
-│   └── deploy.ts
-│
-├── programs/                               # Rust smart contracts (Anchor)
-│   ├── nft_minter/
-│   │   └── src/lib.rs                      # NFTs with treasury fee
-│   ├── spl_token_minter/
-│   │   └── src/lib.rs                      # SPL token mint/burn logic
-│   └── vespercount/
-│       └── src/lib.rs                      # PDA counter logic
-│
-├── tests/                                  # Integration tests (ts-mocha)
-│   ├── nft_minter.ts
-│   ├── spl_token_minter.ts
-│   └── vespercount.ts
-│
-├── .gitignore
-├── Anchor.toml                             # Anchor workspace config
-├── Cargo.lock
-├── Cargo.toml
-├── README.md                               # Project documentation
-├── image.png                               # GitHub preview image
-├── package.json
-├── package-lock.json
-├── run.txt                                 # Step-by-step setup guide
-├── rust-toolchain.toml                     # Rust version specification
-├── tsconfig.json
-└── yarn.lock
+│   │   ├── components/         # Modular UI components (Cards, Navbar)
+│   │   ├── hooks/              # Custom React hooks (Anchor client abstractions)
+│   │   └── utils/              # Event busses and persistent global stores
+│   └── index.html              # Frontend entrypoint
+├── migrations/                 # Anchor deployment and setup scripts
+├── programs/                   # Rust smart contracts
+│   ├── nft_minter/             # SPL Metadata & Treasury pattern
+│   ├── spl_token_minter/       # SPL Token pattern
+│   └── vespercount/            # PDA State pattern
+└── tests/                      # Mocha + Chai unit & integration tests
 ```
 
----
+## 🚀 Quick Start
 
-## How It Works
+Ensure you have [Solana CLI](https://docs.solana.com/cli/install-solana-cli-tools), [Anchor](https://www.anchor-lang.com/docs/installation), and [Node.js](https://nodejs.org/) installed. For detailed installation guidance, please refer to the included [`run.txt`](./run.txt) walkthrough.
 
-```
-1. Write smart contract logic in Rust  →  programs/<name>/src/lib.rs
-           ↓
-2. Compile with `anchor build`
-           ↓
-3. Anchor generates IDL (.json) + TypeScript types  →  target/idl/ & target/types/
-           ↓
-4. Frontend imports IDL  →  Creates typed Program instance via Anchor client
-           ↓
-5. User clicks button in React UI  →  Transaction built & signed by wallet (Phantom)
-           ↓
-6. Transaction sent to Solana Devnet  →  Smart contract executes on-chain
-```
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/alfebrio/vespercount.git
+   cd vespercount
+   yarn install
+   ```
 
----
+2. **Build and Deploy Smart Contracts**
+   Ensure your local Solana config is pointed to devnet (`solana config set --url devnet`).
+   ```bash
+   anchor keys sync
+   anchor build
+   anchor deploy
+   ```
 
-## Quick Start
+3. **Launch the Frontend**
+   ```bash
+   cd app
+   npm install
+   npm run dev
+   ```
+   Navigate to `http://localhost:5173` to interact with the dashboard.
 
-See [`run.txt`](./run.txt) for the full step-by-step setup guide.
+## 🧠 Tech Stack
 
-```bash
-# Clone and install
-git clone https://github.com/alfebrio/vespercount.git
-cd vespercount
-yarn install
+- **Smart Contracts**: Rust, Anchor Framework `0.29.0`, Solana Web3 `1.18.x`
+- **Frontend Core**: React 18, Vite, TypeScript
+- **Web3 Integration**: `@solana/web3.js`, `@coral-xyz/anchor`, `@solana/wallet-adapter`
+- **Testing Methodology**: `ts-mocha`, Chai assertions against a local test validator
+- **Styling**: Vanilla CSS tailored with advanced Flexbox grid architectures
 
-# Build & deploy to Devnet
-anchor build
-anchor deploy
-
-# Run frontend
-cd app && npm install && npm run dev
-```
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| Smart Contracts | Rust, Anchor Framework |
-| Blockchain | Solana (Devnet) |
-| Frontend | React 18, Vite, TypeScript |
-| Wallet | Solana Wallet Adapter (Phantom, Solflare) |
-| NFT Standard | Metaplex Token Metadata (Master Edition V3) |
-| Token Standard | SPL Token Program |
-| Testing | ts-mocha, Chai |
+## 📜 License
+Developed by **alfebrio**. Powered by Solana and Antigravity.
