@@ -15,11 +15,13 @@ import {
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { Program, Idl } from "@coral-xyz/anchor";
 import idl from "../../../target/idl/spl_token_minter.json";
 
-const PROGRAM_ID = new PublicKey("9xtWB3pBpeQCWHNQt6qnYAUr3hbFg2w89TXoMSKUbfph");
+const PROGRAM_ID = new PublicKey("GQdn6CgBfknHDQvo7HLjiUHA5YEGWJxLoUUFC2kZ3cJR");
+const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
 
 export function useToken() {
   const { connection } = useConnection();
@@ -27,7 +29,7 @@ export function useToken() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const mintTokens = useCallback(async (amount: number) => {
+  const mintTokens = useCallback(async (amount: number, name: string, symbol: string) => {
     if (!publicKey) return;
     setLoading(true);
     setError(null);
@@ -62,13 +64,27 @@ export function useToken() {
         )
       );
 
+      const [metadataAddress] = PublicKey.findProgramAddressSync(
+        [Buffer.from("metadata"), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mintKeypair.publicKey.toBuffer()],
+        TOKEN_METADATA_PROGRAM_ID
+      );
+
       const mintIx = await program.methods
-        .mintTokens(new anchor.BN(amount * 10 ** 9)) // Adjust amount for 9 decimals
+        .mintTokens(
+          new anchor.BN(amount * 10 ** 9), 
+          name, 
+          symbol, 
+          "https://example.com/token.json" // default dummy URI
+        )
         .accounts({
           mint: mintKeypair.publicKey,
           destination: ata,
           authority: publicKey,
-          // tokenProgram implicitly inferred if not specified, but let's rely on Anchor's defaults
+          metadata: metadataAddress,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
+          systemProgram: SystemProgram.programId,
+          rent: SYSVAR_RENT_PUBKEY,
         })
         .instruction();
 

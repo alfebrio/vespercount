@@ -29,6 +29,8 @@ pub mod nft_minter {
         name: String,
         symbol: String,
         uri: String,
+        seller_fee_basis_points: u16,
+        max_supply: Option<u64>,
     ) -> Result<()> {
         msg!("Validating inputs...");
         
@@ -83,7 +85,7 @@ pub mod nft_minter {
             name,
             symbol,
             uri,
-            seller_fee_basis_points: 0,
+            seller_fee_basis_points,
             creators: None,
             collection: None,
             uses: None,
@@ -107,7 +109,7 @@ pub mod nft_minter {
         let cpi_program = ctx.accounts.token_metadata_program.to_account_info();
         let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
 
-        create_master_edition_v3(cpi_ctx, Some(0))?;
+        create_master_edition_v3(cpi_ctx, max_supply)?;
         msg!("Master Edition created successfully.");
 
         Ok(())

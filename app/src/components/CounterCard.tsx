@@ -2,58 +2,38 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useCounter } from "../hooks/useCounter";
 import { useToast } from "./ToastContext";
+import { incrementStat } from "../utils/stats";
 
-// ─── Activity Types ─────────────────────────────────────────────────────────
-type ActivityItem = {
-  direction: "up" | "down";
+// ─── History Types ──────────────────────────────────────────────────────────
+type CounterHistoryItem = {
+  type: "increment" | "decrement" | "reset";
   step: number;
-  timestamp: number;
-};
-
-const ACTIVITY_KEY = "counter_activity";
-
-function loadActivity(): ActivityItem[] {
-  try {
-    const raw = localStorage.getItem(ACTIVITY_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as ActivityItem[];
-  } catch {
-    return [];
-  }
-}
-
-function saveActivity(items: ActivityItem[]) {
-  localStorage.setItem(ACTIVITY_KEY, JSON.stringify(items.slice(0, 5)));
-}
-
-// ─── Types ──────────────────────────────────────────────────────────────────
-type TxHistoryItem = {
-  type: "increment" | "decrement";
   txHash: string;
   timestamp: number;
 };
 
-type FailedAction = {
-  type: "increment" | "decrement";
-  step: number;
-};
+const HISTORY_KEY = "counter_history_v2";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
-const TX_HISTORY_KEY = "counter_tx_history";
-
-function loadTxHistory(): TxHistoryItem[] {
+function loadHistory(): CounterHistoryItem[] {
   try {
-    const raw = localStorage.getItem(TX_HISTORY_KEY);
+    const raw = localStorage.getItem(HISTORY_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as TxHistoryItem[];
+    return JSON.parse(raw) as CounterHistoryItem[];
   } catch {
     return [];
   }
 }
 
-function saveTxHistory(items: TxHistoryItem[]) {
-  localStorage.setItem(TX_HISTORY_KEY, JSON.stringify(items.slice(0, 5)));
+function saveHistory(items: CounterHistoryItem[]) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, 7)));
 }
+
+type FailedAction = {
+  type: "increment" | "decrement" | "reset";
+  step: number;
+};
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 function relativeTime(ts: number): string {
   const diff = Math.floor((Date.now() - ts) / 1000);
@@ -76,12 +56,13 @@ function parseFriendlyError(error: string): { friendly: string; isRaw: boolean }
 // ─── Component ──────────────────────────────────────────────────────────────
 export function CounterCard() {
   const { connected } = useWallet();
-  const { state, initialize, increment, decrement, fetchCounter } = useCounter();
+  const { state, initialize, increment, decrement, reset, fetchCounter } = useCounter();
   const { count, initialized, loading, txLoading, error, lastTx, counterPda } = state;
   const { toast } = useToast();
 
-  // Activity tracking
-  const [activity, setActivity] = useState<ActivityItem[]>(loadActivity);
+  // History tracking
+  const [history, setHistory] = useState<CounterHistoryItem[]>(loadHistory);
+  const [historyOpen, setHistoryOpen] = useState(true);
 
   // Direction + animation
   const [direction, setDirection] = useState<"up" | "down" | null>(null);
@@ -90,9 +71,6 @@ export function CounterCard() {
 
   // Step input
   const [step, setStep] = useState(1);
-
-  // Transaction history
-  const [txHistory, setTxHistory] = useState<TxHistoryItem[]>(loadTxHistory);
 
   // Auto-refresh & last synced
   const [lastSynced, setLastSynced] = useState<number>(Date.now());
@@ -121,46 +99,43 @@ export function CounterCard() {
     }
   }, [count]);
 
-  // ─── Track tx history ─────────────────────────────────────────────────────
+  // ─── Track transaction history ───────────────────────────────────────────
   const prevTx = useRef(lastTx);
   const prevTxLoading = useRef(txLoading);
   useEffect(() => {
-    // When a tx completes (txLoading goes from increment/decrement to null and lastTx changes)
     if (
       lastTx &&
       lastTx !== prevTx.current &&
       prevTxLoading.current &&
       prevTxLoading.current !== "initialize"
     ) {
-      const newItem: TxHistoryItem = {
-        type: prevTxLoading.current as "increment" | "decrement",
+      const type = prevTxLoading.current as "increment" | "decrement" | "reset";
+      const newItem: CounterHistoryItem = {
+        type,
+        step: type === "reset" ? 0 : step,
         txHash: lastTx,
         timestamp: Date.now(),
       };
-      setTxHistory((prev: TxHistoryItem[]) => {
-        const updated = [newItem, ...prev].slice(0, 5);
-        saveTxHistory(updated);
+
+      setHistory((prev: CounterHistoryItem[]) => {
+        const updated = [newItem, ...prev].slice(0, 10);
+        saveHistory(updated);
         return updated;
       });
-      // Clear failed action on success
+
+      incrementStat("txCount");
       setFailedAction(null);
-      // Save activity
-      const actItem: ActivityItem = {
-        direction: newItem.type === "increment" ? "up" : "down",
-        step: 1,
-        timestamp: Date.now(),
-      };
-      setActivity((prev: ActivityItem[]) => {
-        const updated = [actItem, ...prev].slice(0, 5);
-        saveActivity(updated);
-        return updated;
-      });
-      // Toast
-      toast.success(newItem.type === "increment" ? "Counter incremented!" : "Counter decremented!");
+      toast.success(
+        type === "increment"
+          ? "Counter incremented!"
+          : type === "decrement"
+            ? "Counter decremented!"
+            : "Counter reset to 0!"
+      );
     }
     prevTx.current = lastTx;
     prevTxLoading.current = txLoading;
-  }, [lastTx, txLoading]);
+  }, [lastTx, txLoading, step, toast]);
 
   // ─── Auto-refresh every 15 seconds ────────────────────────────────────────
   useEffect(() => {
@@ -212,25 +187,36 @@ export function CounterCard() {
     }
   }, [decrement, step]);
 
+  const handleReset = useCallback(async () => {
+    setFailedAction(null);
+    try {
+      await reset();
+    } catch {
+      setFailedAction({ type: "reset", step: 0 });
+    }
+  }, [reset]);
+
   // Track errors for retry
   useEffect(() => {
     if (error && prevTxLoading.current) {
       setFailedAction({
-        type: prevTxLoading.current as "increment" | "decrement",
+        type: prevTxLoading.current as "increment" | "decrement" | "reset",
         step,
       });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [error]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [error, step]);
 
   const handleRetry = useCallback(async () => {
     if (!failedAction) return;
     if (failedAction.type === "increment") {
       await increment(failedAction.step);
-    } else {
+    } else if (failedAction.type === "decrement") {
       await decrement(failedAction.step);
+    } else {
+      await reset();
     }
-  }, [failedAction, increment, decrement]);
+  }, [failedAction, increment, decrement, reset]);
 
   const handleCopyError = useCallback(() => {
     if (error) {
@@ -409,11 +395,20 @@ export function CounterCard() {
               </button>
             </div>
           </div>
+
+          <button
+            className="btn-premium btn-outline"
+            style={{ width: "100%", marginTop: 4, borderColor: "rgba(239, 68, 68, 0.4)", color: "var(--danger)" }}
+            onClick={handleReset}
+            disabled={isLoading || count === 0}
+          >
+            {txLoading === "reset" ? "Resetting..." : "Reset Engine"}
+          </button>
         </>
       )}
 
       {/* Info rows */}
-      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+      <div style={{ marginTop: 12, marginBottom: 12, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
           <span>Status</span>
           <span style={{ color: 'var(--secondary)' }}>Live on Devnet</span>
@@ -440,56 +435,65 @@ export function CounterCard() {
 
       {/* Last tx link */}
       {lastTx && (
-        <a
-          href={`https://solscan.io/tx/${lastTx}?cluster=devnet`}
-          target="_blank"
-          rel="noreferrer"
-          style={{ display: 'block', marginTop: 12, fontSize: '0.75rem', color: 'var(--primary)', opacity: 0.8 }}
-        >
-          ↗ View Last Tx on Solscan
-        </a>
-      )}
-
-      {/* Transaction history */}
-      {txHistory.length > 0 && (
-        <div className="tx-history">
-          <div className="tx-history-title">Recent Transactions</div>
-          <div className="tx-history-list">
-            {txHistory.map((item, i) => (
-              <a
-                key={`${item.txHash}-${i}`}
-                href={`https://solscan.io/tx/${item.txHash}?cluster=devnet`}
-                target="_blank"
-                rel="noreferrer"
-                className="tx-history-item"
-              >
-                <span className={`tx-type tx-type-${item.type}`}>
-                  {item.type === "increment" ? "+" : "−"}
-                </span>
-                <span className="tx-hash">
-                  {item.txHash.slice(0, 6)}…{item.txHash.slice(-4)}
-                </span>
-                <span className="tx-time">{relativeTime(item.timestamp)}</span>
-              </a>
-            ))}
-          </div>
+        <div className="token-success" role="status" aria-live="polite" style={{ marginTop: 4 }}>
+          <p style={{ color: 'var(--success)', fontSize: '0.8rem', fontWeight: 600 }}>✓ Transaction Successful!</p>
+          <a
+            href={`https://solscan.io/tx/${lastTx}?cluster=devnet`}
+            target="_blank"
+            rel="noreferrer"
+            style={{ display: 'block', marginTop: 4, fontSize: '0.75rem', color: 'var(--primary)', opacity: 0.8 }}
+          >
+            ↗ View Tx on Solscan
+          </a>
         </div>
       )}
 
-      {/* Activity Mini-panel — always fills remaining space */}
-      <div className="counter-activity">
-        <div className="counter-activity-title">Recent Activity</div>
-        {activity.length > 0 ? (
-          <div className="counter-activity-list scrollable-list">
-            {activity.map((a, i) => (
-              <div key={`act-${a.timestamp}-${i}`} className="counter-activity-row">
-                <span className={a.direction === "up" ? "activity-arrow-up" : "activity-arrow-down"}>
-                  {a.direction === "up" ? "↑" : "↓"}
-                </span>
-                <span className="activity-step">{a.direction === "up" ? "+" : "−"}{a.step}</span>
-                <span className="activity-time">{relativeTime(a.timestamp)}</span>
-              </div>
-            ))}
+      {/* Transaction History — always fills bottom */}
+      <div className="card-fill-section" style={{ marginTop: 'auto' }}>
+        {history.length > 0 ? (
+          <div className="token-history" style={{ marginTop: 4, borderTop: 'none', paddingTop: 4 }}>
+            <button
+              className="token-history-toggle"
+              onClick={() => setHistoryOpen(!historyOpen)}
+              aria-expanded={historyOpen}
+            >
+              <span>Recent History ({history.length})</span>
+              <span className={`token-history-chevron ${historyOpen ? "open" : ""}`}>▾</span>
+            </button>
+
+            {historyOpen && (
+              <>
+                <div className="token-history-list scrollable-list" style={{ maxHeight: 180, overflowY: 'auto' }}>
+                  {history.map((item, i) => (
+                    <a
+                      key={`hist-${item.txHash}-${i}`}
+                      href={`https://solscan.io/tx/${item.txHash}?cluster=devnet`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="token-history-item"
+                    >
+                      <span className={`token-history-badge token-history-badge-${item.type}`}>
+                        {item.type === "increment" ? "I" : item.type === "decrement" ? "D" : "R"}
+                      </span>
+                      <span className="token-history-amount">
+                        {item.type === "increment" ? "+" : item.type === "decrement" ? "−" : "R"}{item.step === 0 ? "" : item.step}
+                      </span>
+                      <span className="token-history-time">{relativeTime(item.timestamp)}</span>
+                    </a>
+                  ))}
+                </div>
+                <button
+                  className="token-history-clear"
+                  onClick={() => {
+                    setHistory([]);
+                    localStorage.removeItem(HISTORY_KEY);
+                  }}
+                  aria-label="Clear counter history"
+                >
+                  Clear History
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="card-empty-state">

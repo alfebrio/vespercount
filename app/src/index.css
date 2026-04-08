@@ -73,8 +73,13 @@ body {
 }
 
 /* Custom scrollbar for activity/history lists */
+.scrollable-list {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
 .scrollable-list::-webkit-scrollbar {
-  width: 3px;
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .scrollable-list::-webkit-scrollbar-track {
@@ -166,6 +171,10 @@ body {
   color: var(--text-main);
 }
 
+.logo-coral {
+  color: var(--primary);
+}
+
 .brand-icon {
   width: 24px;
   height: 24px;
@@ -180,11 +189,15 @@ body {
 
 /* SOL Balance */
 .sol-balance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
   font-size: 11px;
   font-weight: 500;
   color: var(--text-muted);
   font-family: 'SF Mono', 'Fira Code', monospace;
-  padding: 3px 10px;
+  padding: 0 12px;
   background: var(--bg-surface-elevated);
   border-radius: 99px;
   border: 1px solid var(--border);
@@ -192,12 +205,14 @@ body {
 
 /* Network Badge — Devnet */
 .network-badge {
-  font-size: 10px;
-  font-weight: 500;
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 7px;
+  justify-content: center;
+  height: 28px;
+  font-size: 10px;
+  font-weight: 500;
+  gap: 6px;
+  padding: 0 10px;
   border-radius: 99px;
 }
 
@@ -1556,6 +1571,21 @@ body {
   color: var(--danger);
 }
 
+.token-history-badge-increment {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--success);
+}
+
+.token-history-badge-decrement {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+}
+
+.token-history-badge-reset {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+}
+
 .token-history-amount {
   flex: 1;
   font-weight: 500;
@@ -1609,7 +1639,7 @@ body {
 .counter-activity {
   margin-top: auto;
   padding-top: 10px;
-  border-top: 1px solid var(--border);
+  border-top: none;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1634,7 +1664,7 @@ body {
   align-items: center;
   gap: 6px;
   padding: 4px 0;
-  border-top: 1px solid var(--border);
+  border-top: none;
   font-size: 11px;
 }
 
@@ -1663,6 +1693,29 @@ body {
 .activity-time {
   color: var(--text-muted);
   font-size: 10px;
+}
+
+.history-link-row {
+  text-decoration: none;
+  transition: var(--transition-fast);
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 4px 6px !important;
+  margin: 0 -6px;
+}
+
+.history-link-row:hover {
+  background: rgba(239, 131, 84, 0.08);
+  color: var(--primary);
+}
+
+.history-link-row:hover .activity-step {
+  color: var(--text-main);
+}
+
+.history-link-row:hover svg {
+  opacity: 1;
+  transform: translate(1px, -1px);
 }
 
 /* ─── Toast Notification System ──────────────────────────────────────────── */
@@ -1792,14 +1845,15 @@ body {
   border: none !important;
   border-radius: 99px !important;
   box-shadow: none !important;
-  height: 48px !important;
-  font-size: 0.95rem !important;
-  font-weight: 500 !important;
+  height: 28px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
   transition: var(--transition-fast) !important;
-  padding: 0 20px !important;
+  padding: 0 14px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  font-family: inherit !important;
 }
 
 .wallet-adapter-button:hover {
@@ -1999,6 +2053,7 @@ body {
   grid-template-columns: 1fr 1fr 1fr;
   gap: 24px;
   align-items: center;
+  padding: 0 20px;
 }
 
 .footer-col {

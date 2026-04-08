@@ -21,7 +21,7 @@ export function useNft() {
     return new Program(idl as Idl, provider);
   }, [connection, wallet]);
 
-  const mintNft = useCallback(async (name: string, symbol: string, uri: string) => {
+  const mintNft = useCallback(async (name: string, symbol: string, uri: string, royalties: number, maxSupply: number | null) => {
     const program = getProgram();
     if (!wallet || !program) return;
     setLoading(true);
@@ -42,8 +42,11 @@ export function useNft() {
 
       const TREASURY_ADDRESS = new PublicKey("HQ4yY5sLhHntJzUWe7nDBXp8H2K2S4aXWz8S1L4H4Bqw");
 
+      // Anchor Option<u64> translates to BN | null in ts.
+      const supplyParam = maxSupply === null ? null : new anchor.BN(maxSupply);
+
       const tx = await program.methods
-        .mintNft(name, symbol, uri)
+        .mintNft(name, symbol, uri, royalties * 100, supplyParam)
         .accounts({
           signer: wallet.publicKey,
           treasury: TREASURY_ADDRESS,

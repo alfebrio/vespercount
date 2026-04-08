@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNft } from "../hooks/useNft";
 import { useToast } from "./ToastContext";
+import { incrementStat } from "../utils/stats";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type MintHistoryItem = {
@@ -57,9 +58,11 @@ function parseFriendlyError(error: string): { friendly: string; isRaw: boolean }
 
 // ─── Component ──────────────────────────────────────────────────────────────
 export function NftCard() {
-  const [name, setName] = useState("Vesper ART");
-  const [symbol, setSymbol] = useState("VESP");
-  const [uri, setUri] = useState("https://...");
+  const [name, setName] = useState("");
+  const [symbol, setSymbol] = useState("");
+  const [uri, setUri] = useState("");
+  const [royalties, setRoyalties] = useState<number>(5);
+  const [maxSupply, setMaxSupply] = useState<number | null>(0);
 
   const { mintNft, loading, error } = useNft();
   const { toast } = useToast();
@@ -81,6 +84,7 @@ export function NftCard() {
 
   // Confirmation modal
   const [showConfirm, setShowConfirm] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
 
   // Error expand
   const [errorExpanded, setErrorExpanded] = useState(false);
@@ -191,6 +195,8 @@ export function NftCard() {
   };
 
   const handleMintClick = () => {
+    setFormSubmitted(true);
+    if (!name.trim() || !symbol.trim() || uriValid === false) return;
     setShowConfirm(true);
   };
 
@@ -198,7 +204,7 @@ export function NftCard() {
     setShowConfirm(false);
     setSuccessMint(null);
     setErrorExpanded(false);
-    const mintAddress = await mintNft(name, symbol, uri);
+    const mintAddress = await mintNft(name, symbol, uri, royalties, maxSupply);
     if (mintAddress) {
       setSuccessMint(mintAddress);
       // Save to history
@@ -214,6 +220,8 @@ export function NftCard() {
         saveMintHistory(updated);
         return updated;
       });
+      incrementStat("txCount");
+      incrementStat("nftsCreated");
       toast.success(`NFT "${name}" minted successfully!`);
     }
   };
@@ -235,20 +243,18 @@ export function NftCard() {
     localStorage.removeItem(MINT_HISTORY_KEY);
   };
 
-  const isMintDisabled = loading || uriValid === false || !name.trim() || !symbol.trim();
+  const isMintDisabled = loading;
 
   // ─── Image preview render ─────────────────────────────────────────────────
   const renderPreview = () => {
-    if (!uri.trim() || uriValid === false) return null;
-
     if (previewLoading) {
       return <div className="nft-preview-skeleton skeleton" />;
     }
 
-    if (previewError || !previewUrl) {
+    if (!uri.trim() || uriValid === false || previewError || !previewUrl) {
       return (
         <div className="nft-preview-placeholder">
-          <span>No Preview Available</span>
+          <span>{uriValid === false ? "Invalid URL" : "No Preview Available"}</span>
         </div>
       );
     }
@@ -329,6 +335,14 @@ export function NftCard() {
               {uri.length > 40 ? uri.slice(0, 20) + "…" + uri.slice(-16) : uri}
             </span>
           </div>
+          <div className="nft-confirm-row">
+            <span className="nft-confirm-label">Royalties</span>
+            <span>{royalties}%</span>
+          </div>
+          <div className="nft-confirm-row">
+            <span className="nft-confirm-label">Max Supply</span>
+            <span>{maxSupply === null ? "Unlimited" : maxSupply === 0 ? "1-of-1" : maxSupply}</span>
+          </div>
         </div>
         <div className="nft-confirm-buttons">
           <button
@@ -365,14 +379,15 @@ export function NftCard() {
         <input
           id="nft-name"
           type="text"
-          className={`input-field ${!name.trim() ? "input-invalid" : ""}`}
+          className={`input-field ${formSubmitted && !name.trim() ? "input-invalid" : ""}`}
           value={name}
           onChange={(e) => handleNameChange(e.target.value)}
+          placeholder="Vesper ART"
           aria-required="true"
-          aria-invalid={!name.trim()}
-          aria-describedby={!name.trim() ? "nft-name-error" : undefined}
+          aria-invalid={formSubmitted && !name.trim()}
+          aria-describedby={formSubmitted && !name.trim() ? "nft-name-error" : undefined}
         />
-        {!name.trim() && (
+        {formSubmitted && !name.trim() && (
           <span id="nft-name-error" className="input-hint input-hint-error">
             Name is required
           </span>
@@ -385,14 +400,15 @@ export function NftCard() {
         <input
           id="nft-symbol"
           type="text"
-          className={`input-field ${!symbol.trim() ? "input-invalid" : ""}`}
+          className={`input-field ${formSubmitted && !symbol.trim() ? "input-invalid" : ""}`}
           value={symbol}
           onChange={(e) => handleSymbolChange(e.target.value)}
+          placeholder="VESP"
           aria-required="true"
-          aria-invalid={!symbol.trim()}
-          aria-describedby={!symbol.trim() ? "nft-symbol-error" : undefined}
+          aria-invalid={formSubmitted && !symbol.trim()}
+          aria-describedby={formSubmitted && !symbol.trim() ? "nft-symbol-error" : undefined}
         />
-        {!symbol.trim() && (
+        {formSubmitted && !symbol.trim() && (
           <span id="nft-symbol-error" className="input-hint input-hint-error">
             Symbol is required
           </span>
@@ -411,17 +427,20 @@ export function NftCard() {
           <input
             id="nft-uri"
             type="text"
-            className={`input-field nft-uri-input ${uriValid === false ? "input-invalid" : ""}`}
+            className={`input-field nft-uri-input ${formSubmitted && uriValid === false ? "input-invalid" : ""}`}
             value={uri}
             onChange={(e) => {
               setUri(e.target.value);
               setMetadataLoaded(false);
               userEditedName.current = false;
               userEditedSymbol.current = false;
+              // Reset validation display if they start correcting it
+              if (uriValid === false) setFormSubmitted(false);
             }}
+            placeholder="https://..."
             aria-required="true"
-            aria-invalid={uriValid === false}
-            aria-describedby={uriValid === false ? "nft-uri-error" : undefined}
+            aria-invalid={formSubmitted && uriValid === false}
+            aria-describedby={formSubmitted && uriValid === false ? "nft-uri-error" : undefined}
           />
           {uriValid !== null && (
             <span className={`nft-uri-status ${uriValid ? "nft-uri-valid" : "nft-uri-invalid"}`}>
@@ -429,11 +448,45 @@ export function NftCard() {
             </span>
           )}
         </div>
-        {uriValid === false && (
+        {formSubmitted && uriValid === false && (
           <span id="nft-uri-error" className="input-hint input-hint-error">
-            Please enter a valid URL
+            Invalid URL format
           </span>
         )}
+      </div>
+
+      {/* Royalties & Max Supply */}
+      <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="input-group" style={{ flex: 1 }}>
+          <label className="input-label" htmlFor="nft-royalties">Royalties (%)</label>
+          <input
+            id="nft-royalties"
+            type="number"
+            className="input-field"
+            value={royalties}
+            min={0}
+            max={100}
+            onChange={(e) => setRoyalties(Number(e.target.value))}
+          />
+        </div>
+        <div className="input-group" style={{ flex: 1 }}>
+          <label className="input-label" htmlFor="nft-supply">
+            Max Supply
+            <span className="tooltip-zero" style={{ marginLeft: 8 }} title="0 = 1-of-1 | null = open edition">?</span>
+          </label>
+          <input
+            id="nft-supply"
+            type="number"
+            className="input-field"
+            value={maxSupply === null ? "" : maxSupply}
+            min={0}
+            placeholder="Unlimited"
+            onChange={(e) => {
+              if (e.target.value === "") setMaxSupply(null);
+              else setMaxSupply(Math.max(0, Number(e.target.value)));
+            }}
+          />
+        </div>
       </div>
 
       {/* Image Preview */}

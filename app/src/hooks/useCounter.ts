@@ -16,7 +16,7 @@ export type CounterState = {
   counterPda: PublicKey | null;
   initialized: boolean;
   loading: boolean;
-  txLoading: "increment" | "decrement" | "initialize" | null;
+  txLoading: "increment" | "decrement" | "initialize" | "reset" | null;
   error: string | null;
   lastTx: string | null;
 };
@@ -170,16 +170,12 @@ export function useCounter() {
 
     setState((s) => ({ ...s, txLoading: "increment", error: null, lastTx: null }));
     try {
-      // Call increment `step` times sequentially
-      let lastSig = "";
-      for (let i = 0; i < step; i++) {
-        lastSig = await (program.methods as any)
-          .increment()
-          .accounts({ authority: wallet.publicKey })
-          .rpc();
-      }
+      const tx = await (program.methods as any)
+        .increment(new BN(step))
+        .accounts({ authority: wallet.publicKey })
+        .rpc();
 
-      setState((s) => ({ ...s, lastTx: lastSig }));
+      setState((s) => ({ ...s, lastTx: tx }));
       await fetchCounter();
     } catch (err: any) {
       setState((s) => ({
@@ -199,13 +195,35 @@ export function useCounter() {
 
     setState((s) => ({ ...s, txLoading: "decrement", error: null, lastTx: null }));
     try {
-      let lastSig = "";
-      for (let i = 0; i < step; i++) {
-        lastSig = await (program.methods as any)
-          .decrement()
-          .accounts({ authority: wallet.publicKey })
-          .rpc();
-      }
+      const tx = await (program.methods as any)
+        .decrement(new BN(step))
+        .accounts({ authority: wallet.publicKey })
+        .rpc();
+
+      setState((s) => ({ ...s, lastTx: tx }));
+      await fetchCounter();
+    } catch (err: any) {
+      setState((s) => ({
+        ...s,
+        error: parseAnchorError(err),
+        txLoading: null,
+      }));
+      return;
+    }
+    setState((s) => ({ ...s, txLoading: null }));
+  }, [getProgram, wallet, fetchCounter]);
+
+  // ─── Reset ────────────────────────────────────────────────────────
+  const reset = useCallback(async () => {
+    const program = getProgram();
+    if (!program || !wallet) return;
+
+    setState((s) => ({ ...s, txLoading: "reset", error: null, lastTx: null }));
+    try {
+      const lastSig = await (program.methods as any)
+        .reset()
+        .accounts({ authority: wallet.publicKey })
+        .rpc();
 
       setState((s) => ({ ...s, lastTx: lastSig }));
       await fetchCounter();
@@ -220,7 +238,7 @@ export function useCounter() {
     setState((s) => ({ ...s, txLoading: null }));
   }, [getProgram, wallet, fetchCounter]);
 
-  return { state, initialize, increment, decrement, fetchCounter };
+  return { state, initialize, increment, decrement, reset, fetchCounter };
 }
 
 // ─── Helper: parse Anchor error message ────────────────────────────────────

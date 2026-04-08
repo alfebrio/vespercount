@@ -18,19 +18,27 @@ pub mod vespercount {
         Ok(())
     }
 
-    /// Increment counter sebesar 1
-    pub fn increment(ctx: Context<Update>) -> Result<()> {
+    /// Increment counter sebesar amount yang ditentukan
+    pub fn increment(ctx: Context<Update>, amount: i64) -> Result<()> {
         let counter = &mut ctx.accounts.counter;
-        counter.count = counter.count.checked_add(1).ok_or(ErrorCode::Overflow)?;
-        msg!("Counter incremented! Count: {}", counter.count);
+        counter.count = counter.count.checked_add(amount).ok_or(ErrorCode::Overflow)?;
+        msg!("Counter incremented by {}! Total Count: {}", amount, counter.count);
         Ok(())
     }
 
-    /// Decrement counter sebesar 1
-    pub fn decrement(ctx: Context<Update>) -> Result<()> {
+    /// Decrement counter sebesar amount yang ditentukan
+    pub fn decrement(ctx: Context<Update>, amount: i64) -> Result<()> {
         let counter = &mut ctx.accounts.counter;
-        counter.count = counter.count.checked_sub(1).ok_or(ErrorCode::Underflow)?;
-        msg!("Counter decremented! Count: {}", counter.count);
+        counter.count = counter.count.checked_sub(amount).ok_or(ErrorCode::Underflow)?;
+        msg!("Counter decremented by {}! Total Count: {}", amount, counter.count);
+        Ok(())
+    }
+
+    /// Reset counter ke 0
+    pub fn reset(ctx: Context<Update>) -> Result<()> {
+        let counter = &mut ctx.accounts.counter;
+        counter.count = 0;
+        msg!("Counter reset! Count: {}", counter.count);
         Ok(())
     }
 }

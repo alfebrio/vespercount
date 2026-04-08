@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useToken } from "../hooks/useToken";
 import { useToast } from "./ToastContext";
+import { incrementStat } from "../utils/stats";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 type TxHistoryItem = {
@@ -65,6 +66,8 @@ export function TokenCard() {
 
   // ── Form state ────────────────────────────────────────────────────────────
   const [mintAmount, setMintAmount] = useState(100);
+  const [tokenName, setTokenName] = useState("");
+  const [tokenSymbol, setTokenSymbol] = useState("");
   const [burnAmount, setBurnAmount] = useState(50);
   const [burnMintAddress, setBurnMintAddress] = useState("");
 
@@ -82,6 +85,10 @@ export function TokenCard() {
 
   // ── Burn confirmation ─────────────────────────────────────────────────────
   const [showBurnConfirm, setShowBurnConfirm] = useState(false);
+
+  // ── Validation Tracking ───────────────────────────────────────────────────
+  const [mintFormSubmitted, setMintFormSubmitted] = useState(false);
+  const [burnSubmitted, setBurnSubmitted] = useState(false);
 
   // ── Error expand ──────────────────────────────────────────────────────────
   const [errorExpanded, setErrorExpanded] = useState(false);
@@ -119,11 +126,13 @@ export function TokenCard() {
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
   const handleMint = useCallback(async () => {
+    setMintFormSubmitted(true);
+    if (!tokenName.trim() || !tokenSymbol.trim() || !mintAmountValid) return;
     setSuccessMint(null);
     setSuccessBurn(null);
     setErrorExpanded(false);
     setMintLoading(true);
-    const mintAddress = await mintTokens(mintAmount);
+    const mintAddress = await mintTokens(mintAmount, tokenName, tokenSymbol);
     setMintLoading(false);
     if (mintAddress) {
       const addr = mintAddress.toBase58();
@@ -143,9 +152,11 @@ export function TokenCard() {
         saveTxHistory(updated);
         return updated;
       });
+      incrementStat("txCount");
+      incrementStat("tokensMinted");
       toast.success(`${formatNumber(mintAmount)} tokens minted!`);
     }
-  }, [mintTokens, mintAmount]);
+  }, [mintTokens, mintAmount, tokenName, tokenSymbol, mintAmountValid, toast]);
 
   const handleBurnClick = () => {
     setShowBurnConfirm(true);
@@ -174,9 +185,10 @@ export function TokenCard() {
         saveTxHistory(updated);
         return updated;
       });
+      incrementStat("txCount");
       toast.success(`${formatNumber(burnAmount)} tokens burned!`);
     }
-  }, [burnTokens, burnMintAddress, burnAmount]);
+  }, [burnTokens, burnMintAddress, burnAmount, toast]);
 
   const handleCopyAddress = useCallback(() => {
     if (burnMintAddress) {
@@ -317,6 +329,44 @@ export function TokenCard() {
         {/* ─── Mint Panel ───────────────────────────────────────────────── */}
         {activeTab === "mint" && (
           <div id="token-panel-mint" role="tabpanel" aria-labelledby="Mint tokens">
+            {/* Token Name and Symbol */}
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+              <div className="input-group" style={{ flex: 2, marginBottom: 0 }}>
+                <label className="input-label" htmlFor="token-name">Token Name</label>
+                <input
+                  id="token-name"
+                  type="text"
+                  className={`input-field ${mintFormSubmitted && !tokenName.trim() ? "input-invalid" : ""}`}
+                  value={tokenName}
+                  onChange={(e) => setTokenName(e.target.value)}
+                  maxLength={32}
+                  placeholder="Vesper Token"
+                />
+                {mintFormSubmitted && !tokenName.trim() && (
+                  <span className="input-hint input-hint-error" style={{ position: 'absolute', bottom: -18, left: 0 }}>
+                    Name is required
+                  </span>
+                )}
+              </div>
+              <div className="input-group" style={{ flex: 1, marginBottom: 0, position: 'relative' }}>
+                <label className="input-label" htmlFor="token-symbol">Symbol</label>
+                <input
+                  id="token-symbol"
+                  type="text"
+                  className={`input-field ${mintFormSubmitted && !tokenSymbol.trim() ? "input-invalid" : ""}`}
+                  value={tokenSymbol}
+                  onChange={(e) => setTokenSymbol(e.target.value)}
+                  maxLength={10}
+                  placeholder="VESP"
+                />
+                {mintFormSubmitted && !tokenSymbol.trim() && (
+                  <span className="input-hint input-hint-error" style={{ position: 'absolute', bottom: -18, left: 0 }}>
+                    Required
+                  </span>
+                )}
+              </div>
+            </div>
+
             {/* Amount slider + input */}
             <div className="input-group">
               <label className="input-label" htmlFor="mint-amount">Amount</label>
@@ -359,13 +409,13 @@ export function TokenCard() {
 
             {/* Mint Button */}
             <button
-              className="btn-premium btn-secondary"
+              className="btn-premium btn-primary"
               style={{ width: '100%' }}
               onClick={handleMint}
-              disabled={mintLoading || !mintAmountValid}
-              aria-label="Mint new tokens"
+              disabled={mintLoading}
+              aria-label="Mint tokens"
             >
-              {mintLoading ? "Minting..." : "Mint New Tokens"}
+              {mintLoading ? "Minting..." : "Mint Tokens"}
             </button>
 
             {/* Mint success */}
@@ -498,7 +548,7 @@ export function TokenCard() {
       {/* Transaction History — always fills bottom */}
       <div className="card-fill-section" style={{ marginTop: 'auto' }}>
         {txHistory.length > 0 ? (
-          <div className="token-history" style={{ marginTop: 0, borderTop: 'none', paddingTop: 0 }}>
+          <div className="token-history" style={{ marginTop: 4, borderTop: 'none', paddingTop: 0 }}>
             <button
               className="token-history-toggle"
               onClick={() => setHistoryOpen(!historyOpen)}
