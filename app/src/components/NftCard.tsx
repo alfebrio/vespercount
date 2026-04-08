@@ -167,7 +167,9 @@ export function NftCard() {
           setPreviewUrl(uri);
         }
       } catch {
-        setPreviewError(true);
+        // Fetch may fail due to CORS policies on external images.
+        // Fallback to setting preview URL and letting <img onError> handle real failures
+        setPreviewUrl(uri);
       }
       setPreviewLoading(false);
     }, 500);

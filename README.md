@@ -24,14 +24,15 @@ Three separate Anchor programs, each demonstrating a different pattern on Solana
 
 ### Frontend — Web App (`/app/`)
 
-A React + Vite + TypeScript application that connects to the deployed programs via Anchor's IDL.
+A React + Vite + TypeScript application that connects to the deployed programs via Anchor's IDL. It features a modern, responsive design with a premium glassmorphism aesthetic and a dynamic sticky navbar.
 
 - **Wallet Support:** Phantom & Solflare via `@solana/wallet-adapter-react`
 - **Network:** Solana Devnet (configurable via `VITE_RPC_URL`)
-- **Components:**
-  - `<CounterCard />` — Interacts with the `vespercount` program
-  - `<TokenCard />` — Mints and burns SPL Tokens via `spl_token_minter`
-  - `<NftCard />` — Creates NFTs via `nft_minter`
+- **App Features & Components:**
+  - **Auto-Syncing Counter:** `<CounterCard />` interacts with the `vespercount` program.
+  - **Token Management:** `<TokenCard />` mints and burns SPL Tokens via `spl_token_minter`.
+  - **NFT Studio:** `<NftCard />` creates NFTs via `nft_minter`, featuring real-time metadata fetching and CORS-safe image previews.
+  - **Responsive Layout:** A modular dashboard grid that symmetrically aligns the navbar, cards, and footer sections up to `1600px`.
 
 ---
 
@@ -45,6 +46,7 @@ vespercount/
 │   │   ├── components/                     # Reusable UI components
 │   │   │   ├── CounterCard.tsx
 │   │   │   ├── NftCard.tsx
+│   │   │   ├── ToastContext.tsx
 │   │   │   ├── TokenCard.tsx
 │   │   │   └── WalletButton.tsx
 │   │   ├── hooks/                          # React hooks

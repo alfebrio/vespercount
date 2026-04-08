@@ -5,7 +5,7 @@ import { PublicKey } from "@solana/web3.js";
 import idl from "../../../target/idl/vespercount.json";
 
 // Program ID dari IDL
-const PROGRAM_ID = new PublicKey("96xYKxDbPLnbE1mZmUXJvksn74QUEx7Evh6WmNt9VeM1");
+const PROGRAM_ID = new PublicKey("9P3DhxcewypThYYGDkAhxxE5AfcaxNcEsBwdNrtbSojs");
 
 // Tipe yang di-derive dari IDL
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

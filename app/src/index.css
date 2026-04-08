@@ -73,9 +73,18 @@ body {
 }
 
 /* Custom scrollbar for activity/history lists */
-.scrollable-list::-webkit-scrollbar { width: 3px; }
-.scrollable-list::-webkit-scrollbar-track { background: transparent; }
-.scrollable-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.scrollable-list::-webkit-scrollbar {
+  width: 3px;
+}
+
+.scrollable-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollable-list::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
 
 /* ─── Layout ──────────────────────────────────────────────────────────────── */
 .bg-layer-1 {
@@ -97,7 +106,7 @@ body {
   z-index: 1;
   pointer-events: none;
   opacity: 0.04;
-  background-image: 
+  background-image:
     linear-gradient(to right, var(--secondary) 1px, transparent 1px),
     linear-gradient(to bottom, var(--secondary) 1px, transparent 1px);
   background-size: 40px 40px;
@@ -107,10 +116,13 @@ body {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 0 48px;
-  padding-top: 84px;
+  padding-top: 16px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .navbar {
@@ -119,19 +131,17 @@ body {
   justify-content: space-between;
   height: 52px;
   padding: 0 20px;
-  margin-bottom: 0;
-  position: fixed;
+  margin: 0 auto 32px;
+  position: sticky;
   top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: calc(100% - 64px);
-  max-width: 1200px;
+  width: 100%;
+  max-width: 1600px;
   background: rgba(45, 49, 66, 0.7);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(191, 192, 192, 0.15);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   z-index: 100;
   transition: var(--transition-slow);
 }
@@ -208,8 +218,15 @@ body {
 }
 
 @keyframes pulse-dot-nav {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
-  50% { box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0);
+  }
 }
 
 /* ─── Devnet Warning Banner ──────────────────────────────────────────────── */
@@ -252,7 +269,8 @@ body {
   column-gap: 16px;
   row-gap: 16px;
   margin: 24px auto 40px;
-  max-width: 1400px;
+  width: 100%;
+  max-width: 1600px;
   align-items: stretch;
 }
 
@@ -297,7 +315,7 @@ body {
   -webkit-backdrop-filter: blur(16px) saturate(150%);
   border: 1px solid rgba(191, 192, 192, 0.15);
   border-radius: 0 18px 18px 0;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.05);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   padding: 16px;
   position: relative;
   transition: var(--transition-slow);
@@ -1894,13 +1912,28 @@ body {
 
 /* Hero entrance animations */
 @keyframes hero-enter {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.hero-animate-1 { animation: hero-enter 0.5s var(--fluid-spring) 0ms both; }
-.hero-animate-2 { animation: hero-enter 0.5s var(--fluid-spring) 100ms both; }
-.hero-animate-3 { animation: hero-enter 0.5s var(--fluid-spring) 200ms both; }
+.hero-animate-1 {
+  animation: hero-enter 0.5s var(--fluid-spring) 0ms both;
+}
+
+.hero-animate-2 {
+  animation: hero-enter 0.5s var(--fluid-spring) 100ms both;
+}
+
+.hero-animate-3 {
+  animation: hero-enter 0.5s var(--fluid-spring) 200ms both;
+}
 
 /* Hero Stats Bar */
 .hero-stats {
@@ -1948,15 +1981,17 @@ body {
 
 /* ─── Footer ─────────────────────────────────────────────────────────────── */
 .app-footer {
-  margin-top: 16px;
+  margin: auto auto 0;
   padding: 20px 0 16px;
   position: relative;
+  width: 100%;
+  max-width: 1600px;
 }
 
 .footer-border {
   height: 1px;
   margin-bottom: 16px;
-  background: linear-gradient(to right, rgba(191,192,192,0.1), rgba(191,192,192,0.8), rgba(191,192,192,0.1));
+  background: var(--border);
 }
 
 .footer-content {
@@ -2037,6 +2072,7 @@ body {
   .app-container {
     padding: 0 40px;
   }
+
   .dashboard-grid {
     column-gap: 24px;
   }
